@@ -1,0 +1,71 @@
+USE assign2db;
+-- -----------
+-- Part 1 SQL Updates
+SELECT * FROM user;
+UPDATE user SET image="https://en.wikipedia.org/wiki/Homer_Simpson#/media/File:Homer_Simpson_2006.png" WHERE firstname ="Homer";
+SELECT * FROM user;
+SELECT * FROM post;
+UPDATE post SET postdate = "2020-08-24" WHERE userid IN (SELECT userid FROM user WHERE lastname="Bing");
+SELECT * FROM post;
+
+-- -----------------
+-- Part 2 SQL Inserts
+INSERT INTO user VALUES ("scoop","Sheldon","Cooper",NULL);
+INSERT INTO post VALUES ("333","I am super smart", "2024-01-01",NULL,"scoop");
+INSERT INTO hashtag VALUES ("222", "#bigbang",1,"2024-2-2");
+INSERT INTO hashonpost VALUES ("222","333");
+INSERT INTO hashonpost VALUES ("222","201");
+INSERT INTO hashonpost VALUES ("222","202");
+SELECT * FROM user;
+SELECT * FROM post;
+SELECT * FROM hashtag;
+SELECT * FROM hashonpost;
+
+-- -----------------
+-- Part 3 SQL Queries
+-- Query 1
+SELECT lastname FROM user;
+-- Query 2
+SELECT DISTINCT lastname FROM user;
+-- Query 3
+SELECT * FROM user ORDER BY lastname;
+-- Query 4
+SELECT hashtagtext, hashtagdate FROM hashtag WHERE trending =1;
+-- Query 5
+SELECT postid, posttext, post.userid, firstname FROM user,post WHERE post.userid=user.userid;
+-- Query 6
+SELECT hashtagtext, posttext FROM hashtag, hashonpost, post WHERE post.postid=hashonpost.postid AND hashtag.hashtagid=hashonpost.hashtagid ORDER BY hashtagtext;
+-- Query 7
+SELECT hashtagtext, posttext, firstname, lastname FROM user,post, hashtag,hashonpost WHERE post.userid=user.userid AND post.postid=hashonpost.postid AND hashtag.hashtagid=hashonpost.hashtagid AND (hashtagtext = "#PositiveVibes" OR hashtagtext="#BeYourself");
+-- Query 8
+SELECT posttext, commenttext, commenter.firstname, commenter.lastname FROM user as commenter, user as poster,comments, post WHERE post.userid=poster.userid AND poster.lastname="Bing" and poster.firstname="Chandler" AND commenter.userid=comments.userid and post.postid= comments.postid;
+-- Query 9
+SELECT * FROM hashtag WHERE trending=1 AND hashtagid NOT IN (SELECT hashtagid FROM hashonpost);
+-- Query 10
+SELECT firstname, lastname, posttext, comments.postid, COUNT(comments.userid) FROM  comments, post, user WHERE post.postid=comments.postid AND post.userid=user.userid GROUP BY comments.postid;
+-- Query 11
+SELECT posttext, commenttext, postdate, commentdate FROM comments, post WHERE post.postid= comments.postid and commentdate<postdate;
+-- Query 12
+SELECT user.firstname, user.lastname, user.userid, COUNT(follower) as "FollowedBy" FROM user, follows WHERE follows.following=user.userid GROUP BY following ORDER BY FollowedBy DESC;
+-- Query 13
+CREATE VIEW vCommentsAlot AS SELECT firstname, lastname, posttext, COUNT(comments.userid) AS num FROM  comments, post, user WHERE post.postid=comments.postid AND post.userid=user.userid GROUP BY comments.postid;
+SELECT * FROM vCommentsAlot WHERE num IN (SELECT MAX(num) FROM vCommentsAlot);
+-- Query 14
+SELECT DISTINCT user.firstname, user.lastname, user.userid, followyear FROM user, follows WHERE follows.following=user.userid AND followyear IN (SELECT MIN(followyear) FROM follows);
+-- Query 15  - display the first and last name of users (boring query)
+SELECT firstname, lastname FROM user;
+
+-- -----------------
+-- Part 4 SQL Views/Deletes
+CREATE VIEW vWhoseWho AS SELECT DISTINCT following.firstname AS "Following First Name", following.lastname AS "Following Last Name", following.userid, follers.firstname AS "Follower First Name", follers.lastname AS "Followers Last Name" FROM  user AS following LEFT JOIN follows ON follows.following=following.userid LEFT JOIN user as follers ON follows.follower=follers.userid ORDER BY following.lastname;
+SELECT * FROM vWhoseWho;
+SELECT * FROM user;
+DELETE FROM user WHERE userid = "nflan";
+SELECT * FROM user;
+SELECT COUNT(postid) FROM post;
+DELETE FROM user WHERE userid = "mgell";
+SELECT COUNT(postid) FROM post;
+-- because user mgell had a post in the post table and the post table was created 
+-- with "ON DELETE CASCADE" when a user is deleted, it cascades into the post table
+-- and deletes all of the posts made by that user.
+
